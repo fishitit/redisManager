@@ -95,9 +95,20 @@ pyinstaller --name="RedisVisualManager" ^
     --add-data "views;views" ^
     --add-data "controllers;controllers" ^
     --add-data "utils;utils" ^
+    --hidden-import=redis ^
+    --hidden-import=redis.client ^
+    --hidden-import=redis.connection ^
     --hidden-import=tkinter ^
     --hidden-import=tkinter.ttk ^
     --hidden-import=tkinter.messagebox ^
+    --hidden-import=tkinter.filedialog ^
+    --hidden-import=models.connection_model ^
+    --hidden-import=models.redis_model ^
+    --hidden-import=views.main_view ^
+    --hidden-import=views.connection_dialog ^
+    --hidden-import=views.add_key_dialog ^
+    --hidden-import=views.client_list_dialog ^
+    --hidden-import=controllers.main_controller ^
     main.py
 
 if %errorlevel% neq 0 (

@@ -130,26 +130,52 @@ python main.py
 - key总数
 - 其他统计信息
 
+## 打包可执行文件
+
+### macOS
+```bash
+chmod +x build_mac.sh
+./build_mac.sh
+```
+输出：`dist/RedisVisualManager/RedisVisualManager`
+
+### Windows
+```cmd
+build_win.bat
+```
+输出：`dist\RedisVisualManager\RedisVisualManager.exe`
+
+> 详细打包说明请参考 [打包指南.md](./打包指南.md)
+
 ## 项目结构
 
 ```
-redisTools/
-├── main.py                 # 主程序入口
-├── README.md               # 使用说明
-├── connections.json        # 连接配置文件（自动生成）
-├── models/                 # 数据模型层
+redisManager/
+├── main.py                    # 主程序入口
+├── requirements.txt           # 依赖列表
+├── connections.json           # 连接配置文件（自动生成）
+├── build_mac.sh               # macOS 打包脚本
+├── build_win.bat              # Windows 打包脚本
+├── run.sh                     # 启动脚本
+├── README.md                  # 使用说明
+├── 启动说明.md                 # 快速启动指南
+├── 打包指南.md                 # 打包分发指南
+├── 软件功能规格说明书.md        # 完整功能规格
+│
+├── models/                    # 数据模型层
 │   ├── __init__.py
 │   ├── connection_model.py    # 连接配置管理
 │   └── redis_model.py         # Redis操作封装
-├── views/                  # 视图层
+├── views/                     # 视图层
 │   ├── __init__.py
 │   ├── main_view.py           # 主界面布局
 │   ├── connection_dialog.py   # 连接管理对话框
-│   └── add_key_dialog.py      # 新增/编辑Key对话框
-├── controllers/            # 控制层
+│   ├── add_key_dialog.py      # 新增/编辑Key对话框
+│   └── client_list_dialog.py  # 客户端列表对话框
+├── controllers/               # 控制层
 │   ├── __init__.py
-│   └── main_controller.py   # 主控制器
-└── utils/                  # 工具类（预留）
+│   └── main_controller.py     # 主控制器
+└── utils/                     # 工具类（预留）
 ```
 
 ## 数据类型输入格式
