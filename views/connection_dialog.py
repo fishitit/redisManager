@@ -45,9 +45,9 @@ class ConnectionDialog:
         left_frame = ttk.LabelFrame(main_frame, text="已保存的连接", padding="5")
         left_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 5))
         
-        # 连接列表Treeview
+        # 连接列表Treeview（支持多选）
         columns = ('alias', 'host', 'port', 'db')
-        self.tree = ttk.Treeview(left_frame, columns=columns, show='headings', height=15)
+        self.tree = ttk.Treeview(left_frame, columns=columns, show='headings', height=15, selectmode='extended')
         self.tree.heading('alias', text='别名')
         self.tree.heading('host', text='主机')
         self.tree.heading('port', text='端口')
@@ -176,27 +176,48 @@ class ConnectionDialog:
         # 表单已经填充，直接编辑即可
     
     def delete_connection(self):
-        """删除连接"""
+        """删除连接（支持批量删除）"""
         selected = self.tree.selection()
         if not selected:
             messagebox.showwarning("提示", "请先选择要删除的连接")
             return
-        
-        item = self.tree.item(selected[0])
-        alias = item['values'][0]
-        
-        if messagebox.askyesno("确认删除", f"确定要删除连接 '{alias}' 吗？"):
-            if self.model.delete_connection(alias):
-                self.load_connections()
-                self.alias_var.set("")
-                self.host_var.set("127.0.0.1")
-                self.port_var.set("6379")
-                self.password_var.set("")
-                self.db_var.set("0")
-                self.current_selection = None
-                messagebox.showinfo("成功", "连接已删除")
-            else:
-                messagebox.showerror("错误", "删除失败")
+
+        # 获取所有选中的连接别名
+        aliases = []
+        for item in selected:
+            values = self.tree.item(item)['values']
+            aliases.append(values[0])
+
+        # 根据选中数量显示不同的确认信息
+        if len(aliases) == 1:
+            confirm_msg = f"确定要删除连接 '{aliases[0]}' 吗？"
+        else:
+            confirm_msg = f"确定要删除以下 {len(aliases)} 个连接吗？\n\n" + "\n".join(aliases)
+
+        if messagebox.askyesno("确认删除", confirm_msg):
+            success_count = 0
+            fail_count = 0
+            
+            for alias in aliases:
+                if self.model.delete_connection(alias):
+                    success_count += 1
+                else:
+                    fail_count += 1
+
+            # 重新加载列表
+            self.load_connections()
+            self.alias_var.set("")
+            self.host_var.set("127.0.0.1")
+            self.port_var.set("6379")
+            self.password_var.set("")
+            self.db_var.set("0")
+            self.current_selection = None
+
+            # 显示删除结果
+            result_msg = f"删除完成\n成功: {success_count} 个"
+            if fail_count > 0:
+                result_msg += f"\n失败: {fail_count} 个"
+            messagebox.showinfo("删除结果", result_msg)
     
     def test_connection(self):
         """测试连接"""
