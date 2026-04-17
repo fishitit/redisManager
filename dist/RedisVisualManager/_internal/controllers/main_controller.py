@@ -30,6 +30,7 @@ class Controller:
         self.view.on_add_key_callback = self.add_key
         self.view.on_edit_key_callback = self.edit_key
         self.view.on_delete_key_callback = self.delete_key
+        self.view.on_batch_delete_key_callback = self.batch_delete_key
         self.view.on_rename_key_callback = self.rename_key
         self.view.on_set_ttl_callback = self.set_ttl
         self.view.on_flushdb_callback = self.flushdb
@@ -38,6 +39,7 @@ class Controller:
         self.view.on_show_server_info_callback = self.show_server_info
         self.view.on_show_client_list_callback = self.show_client_list
         self.view.on_get_key_detail_callback = self.get_key_detail_for_copy
+        self.view.on_auto_refresh_callback = self.auto_refresh_key_detail
         
         # 初始化连接列表
         self.refresh_connection_list()
@@ -162,7 +164,22 @@ class Controller:
         value = self.redis_model.get_key_value(key)
         
         self.view.set_key_detail(key, key_type, ttl, value)
-    
+
+    def auto_refresh_key_detail(self):
+        """自动刷新当前选中的Key详情"""
+        if not self.redis_model.connected:
+            return
+
+        key = self.view.detail_key_var.get()
+        if not key:
+            return
+
+        key_type = self.redis_model.get_key_type(key)
+        ttl = self.redis_model.get_key_ttl(key)
+        value = self.redis_model.get_key_value(key)
+
+        self.view.set_key_detail(key, key_type, ttl, value)
+
     def add_key(self):
         """新增Key"""
         if not self.redis_model.connected:
@@ -188,13 +205,33 @@ class Controller:
         """删除Key"""
         if not self.redis_model.connected:
             return
-        
+
         if self.redis_model.delete_key(key):
             messagebox.showinfo("成功", f"Key '{key}' 已删除")
             self.refresh_keys()
             self.view.clear_key_detail()
         else:
             messagebox.showerror("错误", "删除失败")
+
+    def batch_delete_key(self, keys: list):
+        """批量删除Key"""
+        if not self.redis_model.connected:
+            return
+
+        success_count = 0
+        fail_count = 0
+        for key in keys:
+            if self.redis_model.delete_key(key):
+                success_count += 1
+            else:
+                fail_count += 1
+
+        msg = f"批量删除完成\n成功: {success_count} 个"
+        if fail_count > 0:
+            msg += f"\n失败: {fail_count} 个"
+        messagebox.showinfo("批量删除", msg)
+        self.refresh_keys()
+        self.view.clear_key_detail()
     
     def rename_key(self, old_key: str):
         """重命名Key"""

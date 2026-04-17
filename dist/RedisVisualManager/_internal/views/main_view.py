@@ -31,6 +31,7 @@ class MainView:
         self.on_manage_connections_callback = None
         self.on_show_client_list_callback = None
         self.on_get_key_detail_callback = None  # 获取key详情的回调
+        self.on_auto_refresh_callback = None  # 自动刷新详情的回调
         
         # 状态变量
         self.connected_alias = tk.StringVar(value="未连接")
@@ -122,22 +123,23 @@ class MainView:
     
     def create_left_panel(self):
         """创建左侧面板"""
-        left_frame = ttk.LabelFrame(self.paned_window, text="快捷操作", width=120)
-        left_frame.pack_propagate(False)
+        left_frame = ttk.LabelFrame(self.paned_window, text="快捷操作")
+        # 允许面板根据内容自适应调整宽度
 
         # 操作按钮
-        ttk.Button(left_frame, text="🔍 刷新Key列表", command=self.on_refresh).pack(fill=tk.X, pady=3, padx=5)
-        ttk.Button(left_frame, text="➕ 新增Key", command=self.on_add_key).pack(fill=tk.X, pady=3, padx=5)
-        ttk.Button(left_frame, text="✏️ 编辑Key", command=self.on_edit_key).pack(fill=tk.X, pady=3, padx=5)
-        ttk.Button(left_frame, text="🗑️ 删除Key", command=self.on_delete_key).pack(fill=tk.X, pady=3, padx=5)
-        ttk.Button(left_frame, text="📝 重命名Key", command=self.on_rename_key).pack(fill=tk.X, pady=3, padx=5)
-        ttk.Button(left_frame, text="⏰ 设置过期时间", command=self.on_set_ttl).pack(fill=tk.X, pady=3, padx=5)
+        ttk.Button(left_frame, text="🔍 刷新", command=self.on_refresh).pack(fill=tk.X, pady=2, padx=2)
+        ttk.Button(left_frame, text="➕ 新增Key", command=self.on_add_key).pack(fill=tk.X, pady=2, padx=2)
+        ttk.Button(left_frame, text="✏️ 编辑", command=self.on_edit_key).pack(fill=tk.X, pady=2, padx=2)
+        ttk.Button(left_frame, text="🗑️ 删除", command=self.on_delete_key).pack(fill=tk.X, pady=2, padx=2)
+        ttk.Button(left_frame, text="💥 批量删除", command=self.on_batch_delete_key).pack(fill=tk.X, pady=2, padx=2)
+        ttk.Button(left_frame, text="📝 重命名", command=self.on_rename_key).pack(fill=tk.X, pady=2, padx=2)
+        ttk.Button(left_frame, text="⏰ 过期时间", command=self.on_set_ttl).pack(fill=tk.X, pady=2, padx=2)
 
-        ttk.Separator(left_frame, orient=tk.HORIZONTAL).pack(fill=tk.X, pady=10, padx=5)
+        ttk.Separator(left_frame, orient=tk.HORIZONTAL).pack(fill=tk.X, pady=8, padx=2)
 
-        ttk.Button(left_frame, text="⚠️ 清空当前库", command=self.on_flushdb).pack(fill=tk.X, pady=3, padx=5)
-        ttk.Button(left_frame, text="⚠️ 清空所有库", command=self.on_flushall).pack(fill=tk.X, pady=3, padx=5)
-        
+        ttk.Button(left_frame, text="⚠️ 清空当前库", command=self.on_flushdb).pack(fill=tk.X, pady=2, padx=2)
+        ttk.Button(left_frame, text="⚠️ 清空所有库", command=self.on_flushall).pack(fill=tk.X, pady=2, padx=2)
+
         # 添加到PanedWindow
         self.paned_window.add(left_frame, weight=0)
     
@@ -177,7 +179,7 @@ class MainView:
         tree_container = ttk.Frame(list_frame)
         tree_container.pack(fill=tk.BOTH, expand=True)
 
-        self.key_tree = ttk.Treeview(tree_container, columns=('key', 'type', 'ttl'), show='headings', height=20)
+        self.key_tree = ttk.Treeview(tree_container, columns=('key', 'type', 'ttl'), show='headings', height=20, selectmode='extended')
         
         # 添加排序状态变量
         self.sort_column = None
@@ -228,41 +230,38 @@ class MainView:
         # 分页栏
         page_frame = ttk.Frame(center_frame)
         page_frame.pack(fill=tk.X, padx=5, pady=(0, 5))
-        
+
         # 左侧：翻页和页数信息
         left_page_frame = ttk.Frame(page_frame)
         left_page_frame.pack(side=tk.LEFT)
 
-        ttk.Button(left_page_frame, text="上一页", command=self.prev_page).pack(side=tk.LEFT, padx=2)
-        ttk.Label(left_page_frame, text="第").pack(side=tk.LEFT)
-        
-        # 当前页数输入框
-        self.page_entry = ttk.Entry(left_page_frame, textvariable=self.page_var, width=5)
-        self.page_entry.pack(side=tk.LEFT)
-        self.page_entry.bind('<Return>', self.on_page_jump)
-        
-        ttk.Label(left_page_frame, text="页 / 共").pack(side=tk.LEFT)
-        ttk.Label(left_page_frame, textvariable=self.total_pages_var, width=5).pack(side=tk.LEFT)
-        ttk.Label(left_page_frame, text="页").pack(side=tk.LEFT)
-        ttk.Button(left_page_frame, text="下一页", command=self.next_page).pack(side=tk.LEFT, padx=2)
-        
-        ttk.Separator(left_page_frame, orient=tk.VERTICAL).pack(side=tk.LEFT, padx=10, fill=tk.Y)
-        
-        ttk.Label(left_page_frame, text="总计:").pack(side=tk.LEFT)
-        ttk.Label(left_page_frame, textvariable=self.total_keys_var, width=8).pack(side=tk.LEFT)
-        ttk.Label(left_page_frame, text="个Key").pack(side=tk.LEFT)
-        
-        # 右侧：每页条数设置
-        right_page_frame = ttk.Frame(page_frame)
-        right_page_frame.pack(side=tk.RIGHT)
-        
-        ttk.Label(right_page_frame, text="每页显示:").pack(side=tk.LEFT)
+        # 每页条数设置（移到最左侧）
+        ttk.Label(left_page_frame, text="每页显示:").pack(side=tk.LEFT)
         self.page_size_var = tk.StringVar(value="50")
-        self.page_size_combo = ttk.Combobox(right_page_frame, textvariable=self.page_size_var, width=8)
+        self.page_size_combo = ttk.Combobox(left_page_frame, textvariable=self.page_size_var, width=8)
         self.page_size_combo['values'] = ['10', '20', '50', '100', '200', '500']
         self.page_size_combo.current(2)  # 默认50
         self.page_size_combo.pack(side=tk.LEFT, padx=2)
         self.page_size_combo.bind('<<ComboboxSelected>>', self.on_page_size_change)
+
+        ttk.Button(left_page_frame, text="上一页", command=self.prev_page).pack(side=tk.LEFT, padx=2)
+        ttk.Label(left_page_frame, text="第").pack(side=tk.LEFT)
+
+        # 当前页数输入框
+        self.page_entry = ttk.Entry(left_page_frame, textvariable=self.page_var, width=5)
+        self.page_entry.pack(side=tk.LEFT)
+        self.page_entry.bind('<Return>', self.on_page_jump)
+
+        ttk.Label(left_page_frame, text="页 / 共").pack(side=tk.LEFT)
+        ttk.Label(left_page_frame, textvariable=self.total_pages_var, width=5).pack(side=tk.LEFT)
+        ttk.Label(left_page_frame, text="页").pack(side=tk.LEFT)
+        ttk.Button(left_page_frame, text="下一页", command=self.next_page).pack(side=tk.LEFT, padx=2)
+
+        ttk.Separator(left_page_frame, orient=tk.VERTICAL).pack(side=tk.LEFT, padx=10, fill=tk.Y)
+
+        ttk.Label(left_page_frame, text="总计:").pack(side=tk.LEFT)
+        ttk.Label(left_page_frame, textvariable=self.total_keys_var, width=8).pack(side=tk.LEFT)
+        ttk.Label(left_page_frame, text="个Key").pack(side=tk.LEFT)
         
         # 添加到PanedWindow
         self.paned_window.add(center_frame, weight=1)
@@ -275,10 +274,12 @@ class MainView:
         info_frame = ttk.Frame(right_frame)
         info_frame.pack(fill=tk.X, padx=10, pady=10)
 
-        # Key名称
+        # Key名称（可点击复制）
         ttk.Label(info_frame, text="Key:").grid(row=0, column=0, sticky=tk.W, pady=3)
         self.detail_key_var = tk.StringVar()
-        ttk.Label(info_frame, textvariable=self.detail_key_var, foreground="blue").grid(row=0, column=1, sticky=tk.W, pady=3, padx=(5, 0))
+        self.detail_key_label = ttk.Label(info_frame, textvariable=self.detail_key_var, foreground="blue", cursor="hand2")
+        self.detail_key_label.grid(row=0, column=1, sticky=tk.W, pady=3, padx=(5, 0))
+        self.detail_key_label.bind('<Button-1>', lambda e: self.copy_detail_key_name())
 
         # 类型
         ttk.Label(info_frame, text="类型:").grid(row=1, column=0, sticky=tk.W, pady=3)
@@ -289,6 +290,14 @@ class MainView:
         ttk.Label(info_frame, text="TTL:").grid(row=2, column=0, sticky=tk.W, pady=3)
         self.detail_ttl_var = tk.StringVar()
         ttk.Label(info_frame, textvariable=self.detail_ttl_var).grid(row=2, column=1, sticky=tk.W, pady=3, padx=(5, 0))
+
+        # 自动刷新勾选
+        self.auto_refresh_var = tk.BooleanVar(value=False)
+        self.auto_refresh_cb = ttk.Checkbutton(info_frame, text="自动刷新（每秒）", variable=self.auto_refresh_var, command=self.on_auto_refresh_toggle)
+        self.auto_refresh_cb.grid(row=3, column=0, columnspan=2, sticky=tk.W, pady=3)
+
+        # 自动刷新定时器ID
+        self._auto_refresh_job = None
 
         # 值显示区域
         value_frame = ttk.LabelFrame(right_frame, text="Value", padding="5")
@@ -470,6 +479,9 @@ class MainView:
         self.detail_text.config(state=tk.DISABLED)
         self.json_status_var.set("")
         self._current_detail_value = None  # 清空缓存的value
+        # 停止自动刷新
+        self.auto_refresh_var.set(False)
+        self._stop_auto_refresh()
     
     def check_json(self):
         """JSON校验"""
@@ -540,13 +552,69 @@ class MainView:
             self.json_status_var.set("✓ 已显示原始内容")
             self.json_status_label.config(foreground="blue")
     
+    def on_auto_refresh_toggle(self):
+        """自动刷新开关切换"""
+        if self.auto_refresh_var.get():
+            # 开始自动刷新
+            self._start_auto_refresh()
+        else:
+            # 停止自动刷新
+            self._stop_auto_refresh()
+
+    def _start_auto_refresh(self):
+        """启动自动刷新定时器"""
+        self._stop_auto_refresh()  # 先停止已有的定时器
+        self._auto_refresh_job = self.root.after(1000, self._auto_refresh_loop)
+
+    def _auto_refresh_loop(self):
+        """自动刷新循环"""
+        if self.auto_refresh_var.get() and self.on_auto_refresh_callback:
+            self.on_auto_refresh_callback()
+        # 继续下一次循环
+        if self.auto_refresh_var.get():
+            self._auto_refresh_job = self.root.after(1000, self._auto_refresh_loop)
+
+    def _stop_auto_refresh(self):
+        """停止自动刷新定时器"""
+        if self._auto_refresh_job:
+            self.root.after_cancel(self._auto_refresh_job)
+            self._auto_refresh_job = None
+
+    def copy_detail_key_name(self):
+        """复制详情面板中的Key名称"""
+        key_name = self.detail_key_var.get()
+        if key_name:
+            self.root.clipboard_clear()
+            self.root.clipboard_append(key_name)
+
     def get_selected_key(self) -> Optional[str]:
-        """获取选中的Key"""
+        """获取选中的Key（单选）"""
         selected = self.key_tree.selection()
         if selected:
             item = self.key_tree.item(selected[0])
             return item['values'][0]
         return None
+
+    def get_selected_keys(self) -> list:
+        """获取所有选中的Key列表（多选）"""
+        selected = self.key_tree.selection()
+        keys = []
+        for item_id in selected:
+            item = self.key_tree.item(item_id)
+            keys.append(item['values'][0])
+        return keys
+
+    def on_batch_delete_key(self):
+        """批量删除Key"""
+        keys = self.get_selected_keys()
+        if not keys:
+            messagebox.showwarning("提示", "请先选择要删除的Key（可按住Ctrl/Cmd多选）")
+            return
+
+        key_list = "\n".join([f"  • {k}" for k in keys])
+        if messagebox.askyesno("确认批量删除", f"确定要删除以下 {len(keys)} 个Key吗？\n\n{key_list}"):
+            if self.on_batch_delete_key_callback:
+                self.on_batch_delete_key_callback(keys)
     
     # 回调设置方法
     def on_connect(self):
