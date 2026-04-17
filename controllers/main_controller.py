@@ -1,9 +1,10 @@
 """
 控制器 - 连接视图和模型
 """
+import os
 from models import ConnectionModel, RedisModel
 from views import MainView, ConnectionDialog, AddKeyDialog
-from tkinter import messagebox
+from tkinter import messagebox, filedialog
 
 
 class Controller:
@@ -40,6 +41,8 @@ class Controller:
         self.view.on_show_client_list_callback = self.show_client_list
         self.view.on_get_key_detail_callback = self.get_key_detail_for_copy
         self.view.on_auto_refresh_callback = self.auto_refresh_key_detail
+        self.view.on_export_connections_callback = self.export_connections
+        self.view.on_import_connections_callback = self.import_connections
         
         # 初始化连接列表
         self.refresh_connection_list()
@@ -337,12 +340,12 @@ class Controller:
         """获取Key详情（用于复制）"""
         if not self.redis_model.connected:
             return {}
-        
+
         try:
             key_type = self.redis_model.get_key_type(key)
             ttl = self.redis_model.get_key_ttl(key)
             value = self.redis_model.get_key_value(key)
-            
+
             return {
                 'type': key_type,
                 'ttl': ttl,
@@ -351,3 +354,33 @@ class Controller:
         except Exception as e:
             print(f"获取Key详情失败: {e}")
             return {}
+
+    def export_connections(self):
+        """导出连接配置到文件"""
+        file_path = filedialog.asksaveasfilename(
+            title="导出连接配置",
+            defaultextension=".json",
+            filetypes=[("JSON 文件", "*.json"), ("所有文件", "*.*")],
+            initialfile="redis_connections.json"
+        )
+        
+        if file_path:
+            if self.connection_model.export_connections(file_path):
+                messagebox.showinfo("成功", f"连接配置已导出到:\n{file_path}")
+            else:
+                messagebox.showerror("错误", "导出失败")
+
+    def import_connections(self):
+        """从文件导入连接配置"""
+        file_path = filedialog.askopenfilename(
+            title="导入连接配置",
+            filetypes=[("JSON 文件", "*.json"), ("所有文件", "*.*")]
+        )
+        
+        if file_path:
+            success, msg = self.connection_model.import_connections(file_path)
+            if success:
+                self.refresh_connection_list()
+                messagebox.showinfo("成功", msg)
+            else:
+                messagebox.showerror("错误", msg)

@@ -902,6 +902,14 @@ class MainView:
     def on_manage_connections(self):
         if self.on_manage_connections_callback:
             self.on_manage_connections_callback()
+
+    def on_export_connections(self):
+        if self.on_export_connections_callback:
+            self.on_export_connections_callback()
+
+    def on_import_connections(self):
+        if self.on_import_connections_callback:
+            self.on_import_connections_callback()
     
     def prev_page(self):
         """上一页"""
