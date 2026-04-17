@@ -100,8 +100,20 @@ class RedisModel:
             for key in page_keys:
                 key_type = self.client.type(key)
                 ttl = self.client.ttl(key)
-                keys_with_info.append((key, key_type, ttl))
-            
+                
+                # 获取集合类型的大小
+                count = ""
+                if key_type == 'list':
+                    count = self.client.llen(key)
+                elif key_type == 'set':
+                    count = self.client.scard(key)
+                elif key_type == 'zset':
+                    count = self.client.zcard(key)
+                elif key_type == 'hash':
+                    count = self.client.hlen(key)
+                
+                keys_with_info.append((key, key_type, ttl, count))
+
             return keys_with_info, total
         except Exception as e:
             return [], 0

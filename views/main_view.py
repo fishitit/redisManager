@@ -184,19 +184,21 @@ class MainView:
         tree_container = ttk.Frame(list_frame)
         tree_container.pack(fill=tk.BOTH, expand=True)
 
-        self.key_tree = ttk.Treeview(tree_container, columns=('key', 'type', 'ttl'), show='headings', height=20, selectmode='extended')
-        
+        self.key_tree = ttk.Treeview(tree_container, columns=('key', 'type', 'ttl', 'count'), show='headings', height=20, selectmode='extended')
+
         # 添加排序状态变量
         self.sort_column = None
         self.sort_reverse = False
-        
+
         # 设置可排序的列标题
         self.key_tree.heading('key', text='Key', command=lambda: self.sort_key_list('key'))
         self.key_tree.heading('type', text='类型', command=lambda: self.sort_key_list('type'))
         self.key_tree.heading('ttl', text='TTL(秒)', command=lambda: self.sort_key_list('ttl'))
-        self.key_tree.column('key', width=300, minwidth=100, stretch=True)
-        self.key_tree.column('type', width=80, minwidth=60, stretch=False)
-        self.key_tree.column('ttl', width=100, minwidth=80, stretch=False)
+        self.key_tree.heading('count', text='个数', command=lambda: self.sort_key_list('count'))
+        self.key_tree.column('key', width=280, minwidth=100, stretch=True)
+        self.key_tree.column('type', width=70, minwidth=60, stretch=False)
+        self.key_tree.column('ttl', width=80, minwidth=70, stretch=False)
+        self.key_tree.column('count', width=70, minwidth=60, stretch=False)
 
         # 滚动条
         y_scroll = ttk.Scrollbar(tree_container, orient=tk.VERTICAL, command=self.key_tree.yview)
@@ -397,8 +399,8 @@ class MainView:
         """更新Key列表显示（带类型和TTL）"""
         for item in self.key_tree.get_children():
             self.key_tree.delete(item)
-        
-        for key, key_type, ttl in keys_with_info:
+
+        for key, key_type, ttl, count in keys_with_info:
             # 格式化TTL显示
             if ttl == -1:
                 ttl_display = "永不过期"
@@ -406,9 +408,12 @@ class MainView:
                 ttl_display = "不存在"
             else:
                 ttl_display = str(ttl)
-            
-            self.key_tree.insert('', tk.END, values=(key, key_type, ttl_display))
-        
+
+            # 格式化个数显示
+            count_display = str(count) if count else ""
+
+            self.key_tree.insert('', tk.END, values=(key, key_type, ttl_display, count_display))
+
         self.total_keys_var.set(str(total))
         total_pages = max(1, (total + self.page_size - 1) // self.page_size)
         self.total_pages_var.set(str(total_pages))
@@ -710,6 +715,7 @@ class MainView:
         self.key_tree.heading('key', text='Key' + (arrow if column == 'key' else ''))
         self.key_tree.heading('type', text='类型' + (arrow if column == 'type' else ''))
         self.key_tree.heading('ttl', text='TTL(秒)' + (arrow if column == 'ttl' else ''))
+        self.key_tree.heading('count', text='个数' + (arrow if column == 'count' else ''))
     
     def show_key_context_menu(self, event):
         """显示Key右键菜单"""
