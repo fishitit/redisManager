@@ -18,10 +18,10 @@ class ConnectionDialog:
         # 创建顶层窗口
         self.dialog = tk.Toplevel(parent)
         self.dialog.title("连接管理")
-        self.dialog.geometry("700x500")
+        self.dialog.geometry("700x600")
         self.dialog.transient(parent)
         self.dialog.grab_set()
-        
+
         # 居中显示
         self.center_window()
         
@@ -32,8 +32,8 @@ class ConnectionDialog:
         """窗口居中"""
         self.dialog.update_idletasks()
         x = self.parent.winfo_x() + (self.parent.winfo_width() - 700) // 2
-        y = self.parent.winfo_y() + (self.parent.winfo_height() - 500) // 2
-        self.dialog.geometry(f"700x500+{x}+{y}")
+        y = self.parent.winfo_y() + (self.parent.winfo_height() - 600) // 2
+        self.dialog.geometry(f"700x600+{x}+{y}")
     
     def setup_ui(self):
         """设置界面"""
