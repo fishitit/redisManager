@@ -2,7 +2,7 @@
 连接管理对话框视图
 """
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, filedialog
 from typing import Optional, Dict
 
 
@@ -77,6 +77,11 @@ class ConnectionDialog:
         ttk.Button(btn_top_frame, text="添加", command=self.add_connection).pack(fill=tk.X, pady=2)
         ttk.Button(btn_top_frame, text="编辑", command=self.edit_connection).pack(fill=tk.X, pady=2)
         ttk.Button(btn_top_frame, text="删除", command=self.delete_connection).pack(fill=tk.X, pady=2)
+        
+        ttk.Separator(btn_top_frame, orient=tk.HORIZONTAL).pack(fill=tk.X, pady=5)
+        
+        ttk.Button(btn_top_frame, text="📤 导出", command=self.export_connections).pack(fill=tk.X, pady=2)
+        ttk.Button(btn_top_frame, text="📥 导入", command=self.import_connections).pack(fill=tk.X, pady=2)
         
         # 编辑表单区域
         form_frame = ttk.LabelFrame(right_frame, text="连接信息", padding="10")
@@ -284,3 +289,33 @@ class ConnectionDialog:
     def show(self):
         """显示对话框并等待关闭"""
         self.dialog.wait_window()
+
+    def export_connections(self):
+        """导出连接配置到文件"""
+        file_path = filedialog.asksaveasfilename(
+            title="导出连接配置",
+            defaultextension=".json",
+            filetypes=[("JSON 文件", "*.json"), ("所有文件", "*.*")],
+            initialfile="redis_connections.json"
+        )
+        
+        if file_path:
+            if self.model.export_connections(file_path):
+                messagebox.showinfo("成功", f"连接配置已导出到:\n{file_path}")
+            else:
+                messagebox.showerror("错误", "导出失败")
+
+    def import_connections(self):
+        """从文件导入连接配置"""
+        file_path = filedialog.askopenfilename(
+            title="导入连接配置",
+            filetypes=[("JSON 文件", "*.json"), ("所有文件", "*.*")]
+        )
+        
+        if file_path:
+            success, msg = self.model.import_connections(file_path)
+            if success:
+                self.load_connections()
+                messagebox.showinfo("成功", msg)
+            else:
+                messagebox.showerror("错误", msg)

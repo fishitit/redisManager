@@ -2,7 +2,7 @@
 主界面视图 - 三栏布局
 """
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, filedialog
 from typing import Callable, Optional
 
 
@@ -134,6 +134,11 @@ class MainView:
         ttk.Button(left_frame, text="💥 批量删除", command=self.on_batch_delete_key).pack(fill=tk.X, pady=2, padx=2)
         ttk.Button(left_frame, text="📝 重命名", command=self.on_rename_key).pack(fill=tk.X, pady=2, padx=2)
         ttk.Button(left_frame, text="⏰ 过期时间", command=self.on_set_ttl).pack(fill=tk.X, pady=2, padx=2)
+
+        ttk.Separator(left_frame, orient=tk.HORIZONTAL).pack(fill=tk.X, pady=8, padx=2)
+
+        ttk.Button(left_frame, text="📤 导出连接", command=self.on_export_connections).pack(fill=tk.X, pady=2, padx=2)
+        ttk.Button(left_frame, text="📥 导入连接", command=self.on_import_connections).pack(fill=tk.X, pady=2, padx=2)
 
         ttk.Separator(left_frame, orient=tk.HORIZONTAL).pack(fill=tk.X, pady=8, padx=2)
 
