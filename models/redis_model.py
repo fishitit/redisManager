@@ -156,6 +156,23 @@ class RedisModel:
             return self.client.ttl(key)
         except:
             return -2
+
+    def get_key_count(self, key: str, key_type: str) -> Optional[int]:
+        """获取集合类型key的元素个数"""
+        if not self.connected or not key_type:
+            return None
+        try:
+            if key_type == 'list':
+                return self.client.llen(key)
+            elif key_type == 'set':
+                return self.client.scard(key)
+            elif key_type == 'zset':
+                return self.client.zcard(key)
+            elif key_type == 'hash':
+                return self.client.hlen(key)
+            return None
+        except:
+            return None
     
     def set_key_ttl(self, key: str, ttl: int) -> bool:
         """设置key的过期时间"""

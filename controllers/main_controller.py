@@ -161,12 +161,13 @@ class Controller:
         """选中Key时显示详情"""
         if not self.redis_model.connected:
             return
-        
+
         key_type = self.redis_model.get_key_type(key)
         ttl = self.redis_model.get_key_ttl(key)
         value = self.redis_model.get_key_value(key)
-        
-        self.view.set_key_detail(key, key_type, ttl, value)
+        count = self.redis_model.get_key_count(key, key_type)
+
+        self.view.set_key_detail(key, key_type, ttl, value, count)
 
     def auto_refresh_key_detail(self):
         """自动刷新当前选中的Key详情"""
@@ -180,8 +181,9 @@ class Controller:
         key_type = self.redis_model.get_key_type(key)
         ttl = self.redis_model.get_key_ttl(key)
         value = self.redis_model.get_key_value(key)
+        count = self.redis_model.get_key_count(key, key_type)
 
-        self.view.set_key_detail(key, key_type, ttl, value)
+        self.view.set_key_detail(key, key_type, ttl, value, count)
 
     def add_key(self):
         """新增Key"""
@@ -345,10 +347,12 @@ class Controller:
             key_type = self.redis_model.get_key_type(key)
             ttl = self.redis_model.get_key_ttl(key)
             value = self.redis_model.get_key_value(key)
+            count = self.redis_model.get_key_count(key, key_type)
 
             return {
                 'type': key_type,
                 'ttl': ttl,
+                'count': count,
                 'value': value
             }
         except Exception as e:

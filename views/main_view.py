@@ -298,10 +298,15 @@ class MainView:
         self.detail_ttl_var = tk.StringVar()
         ttk.Label(info_frame, textvariable=self.detail_ttl_var).grid(row=2, column=1, sticky=tk.W, pady=3, padx=(5, 0))
 
+        # 个数
+        ttk.Label(info_frame, text="个数:").grid(row=3, column=0, sticky=tk.W, pady=3)
+        self.detail_count_var = tk.StringVar()
+        ttk.Label(info_frame, textvariable=self.detail_count_var).grid(row=3, column=1, sticky=tk.W, pady=3, padx=(5, 0))
+
         # 自动刷新勾选
         self.auto_refresh_var = tk.BooleanVar(value=False)
         self.auto_refresh_cb = ttk.Checkbutton(info_frame, text="自动刷新（每秒）", variable=self.auto_refresh_var, command=self.on_auto_refresh_toggle)
-        self.auto_refresh_cb.grid(row=3, column=0, columnspan=2, sticky=tk.W, pady=3)
+        self.auto_refresh_cb.grid(row=4, column=0, columnspan=2, sticky=tk.W, pady=3)
 
         # 自动刷新定时器ID
         self._auto_refresh_job = None
@@ -419,17 +424,23 @@ class MainView:
         self.total_pages_var.set(str(total_pages))
         self.page_var.set(str(self.current_page))
     
-    def set_key_detail(self, key: str, key_type: str, ttl: int, value: any):
+    def set_key_detail(self, key: str, key_type: str, ttl: int, value: any, count: int = None):
         """设置Key详情"""
         self.detail_key_var.set(key)
         self.detail_type_var.set(key_type)
-        
+
         if ttl == -1:
             self.detail_ttl_var.set("永不过期")
         elif ttl == -2:
             self.detail_ttl_var.set("Key不存在")
         else:
             self.detail_ttl_var.set(f"{ttl}秒")
+
+        # 显示个数
+        if count is not None:
+            self.detail_count_var.set(str(count))
+        else:
+            self.detail_count_var.set("")
         
         # 显示值
         self.detail_text.config(state=tk.NORMAL)
@@ -484,6 +495,7 @@ class MainView:
         self.detail_key_var.set("")
         self.detail_type_var.set("")
         self.detail_ttl_var.set("")
+        self.detail_count_var.set("")
         self.detail_text.config(state=tk.NORMAL)
         self.detail_text.delete("1.0", tk.END)
         self.detail_text.config(state=tk.DISABLED)
